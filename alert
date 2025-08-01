@@ -1,0 +1,69 @@
+from flask import Flask, request, jsonify
+import logging
+import sys
+
+app = Flask(__name__)
+
+class AlertStub:
+    def __init__(self, logfile="alert_log.txt"):
+        self.previous_states = {}
+        self.logger = self._setup_logger(logfile)
+
+    def _setup_logger(self, logfile):
+        logger = logging.getLogger("AlertStubLogger")
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+
+        if not logger.handlers:
+            try:
+                handler = logging.StreamHandler(sys.stdout)
+                handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+                logger.addHandler(handler)
+            except Exception:
+                handler = logging.FileHandler(logfile)
+                handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+                logger.addHandler(handler)
+                logger.warning("Console unavailable. Logging to file instead.")
+        return logger
+
+    def process_alert(self, machine_id: str, status: str):
+        status = status.upper()
+        last_status = self.previous_states.get(machine_id)
+
+        if status == "CRITICAL" and last_status != "CRITICAL":
+            alert_msg = f"🚨 ALERT: {machine_id} changed to CRITICAL!"
+            self.logger.info(alert_msg)
+            self.logger.info("📲 SMS alert simulated.")
+            self.logger.info("📧 Email alert simulated.")
+            self.previous_states[machine_id] = "CRITICAL"
+            return {
+                "alert": alert_msg,
+                "details": [
+                    "📲 SMS alert simulated.",
+                    "📧 Email alert simulated."
+                ]
+            }
+        else:
+            self.previous_states[machine_id] = status
+            return None
+
+alert_stub = AlertStub()
+
+@app.route('/api/alert', methods=['POST'])
+def receive_alert():
+    data = request.get_json()
+    machine_id = data.get("machine_id")
+    status = data.get("status")
+
+    if not machine_id or not status:
+        return jsonify({"error": "machine_id and status are required"}), 400
+
+    result = alert_stub.process_alert(machine_id, status)
+
+    if result:
+        return jsonify(result), 200
+    else:
+        return jsonify({"message": "No alert triggered."}), 200
+
+if __name__ == '__main__':
+    app.run(debug=True)
