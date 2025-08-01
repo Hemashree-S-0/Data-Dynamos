@@ -1,0 +1,17 @@
+{
+  "3d_printer": {
+    "temp": { "min": 30, "max": 90 },
+    "pressure": { "min": 20, "max": 60 },
+    "vibration": { "min": 0, "max": 4 },
+  },
+  "cnc_mill": {
+    "temp": { "min": 35, "max": 75 },
+    "pressure": { "min": 40, "max": 100 },
+    "vibration": { "min": 0, "max": 6 },
+  },
+  "air_compressor": {
+    "temp": { "min": 25, "max": 80 },
+    "pressure": { "min": 60, "max": 120 },
+    "vibration": { "min": 0, "max": 5 },
+  }
+}
